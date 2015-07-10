@@ -6,7 +6,7 @@ import java.util.Random;
  */
 
 class MyPrint {
-    public static void myPrint(Node[] list) {
+    public static void myPrint(LinkedListNode[] list) {
         for(int i=0; i < list.length; i++) {
             Neighbour it;
             for(it=list[i].head; it.next!=null; it=it.next) {
@@ -39,28 +39,28 @@ class MyPrint {
     }
 }
 
-class Node {
+class LinkedListNode {
 //    int dist;
     Neighbour head;
     Neighbour tail;
 
-    public Node() {
+    public LinkedListNode() {
 //        dist = Dijkstra.INFINITE;
         head = null;
         tail = null;
     }
-    public boolean contains(int id) {
-        if(this.head != null) {
-            Neighbour it = this.head;
-            while(it.next != null) {
-                if(it.id == id) return true;
-                it = it.next;
-            }
-            if(it != null)
-                if(it.id == id) return true;
-        }
-        return false;
-    }
+//    public boolean contains(int id) {
+//        if(this.head != null) {
+//            Neighbour it = this.head;
+//            while(it.next != null) {
+//                if(it.id == id) return true;
+//                it = it.next;
+//            }
+//            if(it != null)
+//                if(it.id == id) return true;
+//        }
+//        return false;
+//    }
 
 //    public void setDist(int newDist) {
 //        dist = newDist;
@@ -103,6 +103,63 @@ class Neighbour {
 //    }
 }
 
+class MyBST_Node {
+    MyBST_Node left, right;
+    int id;
+
+    public MyBST_Node(int id) {
+        this.id = id;
+        left = null;
+        right = null;
+    }
+    public boolean biggerThan(MyBST_Node node) {
+        if(node == null) return true;
+        else return this.id > node.id ? true:false;
+    }
+}
+
+class MyBST {
+    MyBST_Node root;
+
+    public MyBST() {
+        root = null;
+    }
+    public boolean contains(MyBST_Node node) {
+        return contains(root, node);
+    }
+
+    private boolean contains(MyBST_Node subRoot, MyBST_Node node) {
+        if(root == null)
+            return false;
+        if(subRoot == null)
+            return false;
+        if(node.biggerThan(subRoot))
+            return contains(subRoot.right, node);
+        else
+            return contains(subRoot.left, node);
+    }
+
+    public void insert(MyBST_Node node) {
+        root = insert(root, node);
+    }
+    private MyBST_Node insert(MyBST_Node subRoot, MyBST_Node node) {
+        // the tree is empty
+        if(root == null) {
+            root = node;
+            return root;
+        }
+        if(subRoot == null)
+            return node;
+        // otherwise
+        if(node.biggerThan(subRoot))
+            subRoot.right = insert(subRoot.right, node);
+        else
+            subRoot.left = insert(subRoot.left, node);
+
+        return subRoot;
+    }
+}
+
 class MyGraph {
 
     int numVertex;  // number of nodes
@@ -110,7 +167,8 @@ class MyGraph {
     int x;  // source node
     float d;  // density of edges
 
-    Node[] adjList;
+    LinkedListNode[] adjList;
+
 
     public MyGraph(int n, float d, int x) {
         this.x = x;
@@ -120,29 +178,38 @@ class MyGraph {
 
         System.out.println("SourceNode:" + x + " -- # of Node:" +
                 numVertex + " -- # of Edge:" + numEdge);
-        adjList = new Node[numVertex];
+        adjList = new LinkedListNode[numVertex];
         // initialize the adjacency list
-        adjList = new Node[numVertex];
+        adjList = new LinkedListNode[numVertex];
         for(int i=0; i < numVertex; i++) {
-            adjList[i] = new Node();
+            adjList[i] = new LinkedListNode();
         }
+
+        MyBST[] bst = new MyBST[numVertex];
+//        for(int i=0; i < numVertex; i++) {
+//            bst[i] = new MyBST();
+//        }
 
         // generate edges
         for(int i=0; i < numEdge; i++){
             Random random = new Random(System.currentTimeMillis()*i);
-            int u = random.nextInt(n);
-            int v = random.nextInt(n);
+            int u = random.nextInt(numVertex);
+            int v = random.nextInt(numVertex);
+            MyBST_Node node = new MyBST_Node(v);
+            if(bst[u] == null) bst[u] = new MyBST();
             // skip this if u & v already connected
-            if(u==v || adjList[u].contains(v)) {
+            if(u==v || bst[u].contains(node)) {
                 i --;
                 continue;
             }
             int w = random.nextInt(1000) + 1;
             putAdjList(u, v, w);
             putAdjList(v, u, w);
+            bst[u].insert(node);
         }
-        MyPrint.myPrint(adjList);
-        System.out.println();
+//        System.out.println("---------------------- THE GRAPH ----------------------");
+//        MyPrint.myPrint(adjList);
+//        System.out.println();
     }
     public MyGraph(String filename) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(filename));
@@ -154,9 +221,9 @@ class MyGraph {
         this.numEdge = Integer.valueOf(tmp[1]);
         System.out.println("SourceNode:" + x + " -- # of Node:" + numVertex + " -- # of Edge:" + numEdge);
         // initialize the adjacency list
-        adjList = new Node[numVertex];
+        adjList = new LinkedListNode[numVertex];
         for(int i=0; i < numVertex; i++) {
-            adjList[i] = new Node();
+            adjList[i] = new LinkedListNode();
         }
 
         // v1 v2 c1
@@ -170,9 +237,9 @@ class MyGraph {
                     Integer.valueOf(tmp[0]),
                     Integer.valueOf(tmp[2]));
         }
-        System.out.println("---------------------- THE GRAPH ----------------------");
-        MyPrint.myPrint(adjList);
-        System.out.println();
+//        System.out.println("---------------------- THE GRAPH ----------------------");
+//        MyPrint.myPrint(adjList);
+//        System.out.println();
     }
 
     public void putAdjList(int vs, int vd, int w) {
@@ -217,9 +284,9 @@ class LeftistTree {
     private LeftistTreeNode root;
     private LeftistTreeNode[] leftistTree;
     private int capacity;   // number of nodes in tree
-    private Node[] adjList;
+    private LinkedListNode[] adjList;
 
-    public LeftistTree(Node[] inputList, int sid) {
+    public LeftistTree(LinkedListNode[] inputList, int sid) {
         adjList = inputList;
         capacity = 0;
         leftistTree = new LeftistTreeNode[adjList.length];
@@ -442,8 +509,8 @@ public class Dijkstra {
         System.out.print("Please input the command: ");
 //        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 //        String[] cmd = br.toString().split(" ");
-        String[] cmd = ("-l topo.txt").split(" ");
-//        String[] cmd = ("-r 1000 0.01 3").split(" ");
+//        String[] cmd = ("-l topo.txt").split(" ");
+        String[] cmd = ("-r 5000 1 3").split(" ");
         if(cmd.length != 4 && cmd.length != 2) {
             System.err.println("Usage: [-r n d x] or [-f/-l filename]");
             System.exit(0);
