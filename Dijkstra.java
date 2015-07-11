@@ -1,9 +1,9 @@
-import java.io.*;
-import java.util.Random;
-
 /**
  * Created by peng on 6/29/15.
  */
+import java.io.*;
+import java.util.Random;
+
 
 class MyPrint {
     public static void myPrint(LinkedListNode[] list) {
@@ -422,25 +422,26 @@ class LeftistTree {
         return 0;
     }
 
-    public void reinsertNode(int id) {
+    public void takeOut(int id) {
         LeftistTreeNode parent = leftistTree[id].parent;
         // the to be reinserted node is a child node
         if(parent != null) {
             // left child of its parent
-            if(parent.left.id == id)
+            if (parent.left.id == id)
                 parent.left = null;
-            // right child of its parent
-            else if(parent.right.id == id)
+                // right child of its parent
+            else if (parent.right.id == id)
                 parent.right = null;
             cascadingCheck(parent);
-            root = merge(root, leftistTree[id]);
-            root.parent = null;
         }
-        // else, it is the root, do nothing
+        leftistTree[id].parent = null;
     }
     public void decreaseKey(int id, long newDist) {
+        takeOut(id);
         leftistTree[id].dist = newDist;
-        reinsertNode(id);
+//        reinsertNode(id);
+        if(root.id != id)
+            insert(id);
     }
 }
 
@@ -509,8 +510,8 @@ public class Dijkstra {
         System.out.print("Please input the command: ");
 //        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 //        String[] cmd = br.toString().split(" ");
-//        String[] cmd = ("-l topo.txt").split(" ");
-        String[] cmd = ("-r 5000 1 3").split(" ");
+        String[] cmd = ("-l topo.txt").split(" ");
+//        String[] cmd = ("-r 5000 1 3").split(" ");
         if(cmd.length != 4 && cmd.length != 2) {
             System.err.println("Usage: [-r n d x] or [-f/-l filename]");
             System.exit(0);
