@@ -23,13 +23,11 @@ class MyPrint {
         else System.out.print(" -- parent: null");
         System.out.println();
         if(root.left != null) {
-//            System.out.println("id:"+root.id+" -- left:"+root.left.id);
             System.out.println(" -- left:" + root.left.id);
             if(root.right != null) System.out.println(" -- right:"+root.right.id);
             myPrint(root.left);
         }
         if(root.right != null) {
-//            System.out.println("id:"+root.id+" -- right:" + root.right.id);
             myPrint(root.right);
         }
     }
@@ -143,7 +141,7 @@ class MyBST {
         root = insert(root, node);
     }
     private MyBST_Node insert(MyBST_Node subRoot, MyBST_Node node) {
-        // the tree is empty
+        // the ltree is empty
         if(root == null) {
             root = node;
             return root;
@@ -166,9 +164,7 @@ class MyGraph {
     int numEdge;  // number of edges
     int x;  // source node
     float d;  // density of edges
-
     LinkedListNode[] adjList;
-
 
     public MyGraph(int n, float d, int x) {
         this.x = x;
@@ -178,19 +174,14 @@ class MyGraph {
 
         System.out.println("SourceNode:" + x + " -- # of Node:" +
                 numVertex + " -- # of Edge:" + numEdge);
-        adjList = new LinkedListNode[numVertex];
         // initialize the adjacency list
         adjList = new LinkedListNode[numVertex];
         for(int i=0; i < numVertex; i++) {
             adjList[i] = new LinkedListNode();
         }
 
-        MyBST[] bst = new MyBST[numVertex];
-//        for(int i=0; i < numVertex; i++) {
-//            bst[i] = new MyBST();
-//        }
-
         // generate edges
+        MyBST[] bst = new MyBST[numVertex];
         for(int i=0; i < numEdge; i++){
             Random random = new Random(System.currentTimeMillis()*i);
             int u = random.nextInt(numVertex);
@@ -220,6 +211,7 @@ class MyGraph {
         this.numVertex = Integer.valueOf(tmp[0]);
         this.numEdge = Integer.valueOf(tmp[1]);
         System.out.println("SourceNode:" + x + " -- # of Node:" + numVertex + " -- # of Edge:" + numEdge);
+
         // initialize the adjacency list
         adjList = new LinkedListNode[numVertex];
         for(int i=0; i < numVertex; i++) {
@@ -253,13 +245,40 @@ class MyGraph {
             adjList[vs].tail = adjList[vs].tail.next;
         }
     }
+
+    public int traversal() {
+        int count = 0;
+        boolean[] counted = new boolean[adjList.length];
+        for(int i=0; i < counted.length; i++) counted[i] = false;
+        for(int i=0; i < adjList.length; i++) {
+            if(!counted[i]) {
+                counted[i] = true;
+                count ++;
+            }
+            Neighbour it = adjList[i].head;
+            while(it.next != null) {
+                if(!counted[it.id]) {
+                    counted[it.id] = true;
+                    count ++;
+                }
+                it = it.next;
+            }
+            if(it != null) {
+                if(!counted[it.id]) {
+                    counted[it.id] = true;
+                    count ++;
+                }
+            }
+        }
+        return count;
+    }
 }
 
 class LeftistTreeNode {
     int rank;
     int id;
     long dist;
-    // tree structure
+    // ltree structure
     LeftistTreeNode left;
     LeftistTreeNode right;
     LeftistTreeNode parent;
@@ -283,7 +302,7 @@ class LeftistTree {
     private LeftistTreeNode prevRoot;
     private LeftistTreeNode root;
     private LeftistTreeNode[] leftistTree;
-    private int capacity;   // number of nodes in tree
+    private int capacity;   // number of nodes in ltree
     private LinkedListNode[] adjList;
 
     public LeftistTree(LinkedListNode[] inputList, int sid) {
@@ -309,7 +328,7 @@ class LeftistTree {
     public long getDist(int id) {
         return leftistTree[id].dist;
     }
-    // Empty the tree info of this node
+    // Empty the ltree info of this node
     private void empty(int id) {
         leftistTree[id].rank = Dijkstra.INFINITE;
         leftistTree[id].left = null;
@@ -317,13 +336,13 @@ class LeftistTree {
         leftistTree[id].parent = null;
         capacity --;
     }
-    // Remove from the tree structure, add to the path
+    // Remove from the ltree structure, add to the path
     public int removeMin() {
         int id = root.id;
         prevRoot = root;
         // get the new root
         root = merge(root.left, root.right);
-        // the tree is not empty
+        // the ltree is not empty
         if(root != null) {
             root.parent = null;
             empty(id);
@@ -331,7 +350,7 @@ class LeftistTree {
 
             root.prev = prevRoot;
         }
-        // otherwise, the tree is empty
+        // otherwise, the ltree is empty
         return id;
     }
     public void insert(int id) {
@@ -357,7 +376,7 @@ class LeftistTree {
         if(theOther == null) return subRoot;
 
         // Make sure the node with smaller key is the subRoot
-        // Use dist as the comparable key of the tree
+        // Use dist as the comparable key of the ltree
         if(subRoot.dist > theOther.dist) {
 //            swap(subRoot, theOther);
             LeftistTreeNode tmp = subRoot;
@@ -371,7 +390,7 @@ class LeftistTree {
         subRoot.right = merge(subRoot.right, theOther);
         subRoot.right.parent = subRoot;
 
-        // To make it a leftist tree, keep left with bigger rank
+        // To make it a leftist ltree, keep left with bigger rank
         if(subRoot.left == null) {
 //            swap(subRoot.left, subRoot.right);
             swapChild(subRoot);
@@ -525,44 +544,47 @@ class FibonacciTree {
 public class Dijkstra {
     public final static int INFINITE = 999999;
     private MyGraph myGraph;
-    private LeftistTree tree;
+    private LeftistTree ltree;
+    private FibonacciTree ftree;
 
     private boolean traversal[];
-    // tree the the Q, when root is null -> Q is empty
+    // ltree the the Q, when root is null -> Q is empty
 
     public Dijkstra(MyGraph myGraph, int type) {
         this.myGraph = myGraph;
         switch (type) {
             case 0: // Leftist
-                tree = new LeftistTree(myGraph.adjList, myGraph.x);
+                ltree = new LeftistTree(myGraph.adjList, myGraph.x);
                 break;
             case 1: // Fibonnaci
+                ftree = new FibonacciTree(myGraph.adjList, myGraph.x);
                 break;
             case 2: // Both
-                tree = new LeftistTree(myGraph.adjList, myGraph.x);
+                ltree = new LeftistTree(myGraph.adjList, myGraph.x);
+                ftree = new FibonacciTree(myGraph.adjList, myGraph.x);
                 break;
         }
     }
 
     public void relax(int u, Neighbour vNeighbour) {
         int v = vNeighbour.id;
-        if(tree.getDist(u) + vNeighbour.w < tree.getDist(v)) {
-            long newDist = tree.getDist(u) + vNeighbour.w;
-            tree.decreaseKey(v, newDist);
-//            tree.leftistTree[u].next = tree.leftistTree[vid];
-//            tree.leftistTree[vid].prev = tree.leftistTree[u];
+        if(ltree.getDist(u) + vNeighbour.w < ltree.getDist(v)) {
+            long newDist = ltree.getDist(u) + vNeighbour.w;
+            ltree.decreaseKey(v, newDist);
+//            ltree.leftistTree[u].next = ltree.leftistTree[vid];
+//            ltree.leftistTree[vid].prev = ltree.leftistTree[u];
         }
     }
 
-    public void DijkstraAlg(MyGraph myGraph, int x) {
+    public void DijkstraAlg(MyGraph myGraph) {
         int u;
 
         traversal = new boolean[myGraph.numVertex];
         for(int i=0; i < myGraph.numVertex; i++) traversal[i] = false;
 
         // main for loop
-        while(tree.getMin() != null) {
-            u = tree.removeMin();
+        while(ltree.getMin() != null) {
+            u = ltree.removeMin();
             traversal[u] = true;
             // Walk through the adjacency list of node u
             Neighbour it = myGraph.adjList[u].head;
@@ -573,8 +595,8 @@ public class Dijkstra {
             if(it != null && !traversal[it.id])
                 relax(u, it);
             System.out.println("--------------------------------------------------");
-            if(tree.getMin() != null) {
-                MyPrint.myPrint(tree.getMin());
+            if(ltree.getMin() != null) {
+                MyPrint.myPrint(ltree.getMin());
             }
         }
     }
@@ -589,16 +611,21 @@ public class Dijkstra {
 //        String[] cmd = br.toString().split(" ");
         String[] cmd = ("-l topo.txt").split(" ");
 //        String[] cmd = ("-r 5000 1 3").split(" ");
+
         if(cmd.length != 4 && cmd.length != 2) {
             System.err.println("Usage: [-r n d x] or [-f/-l filename]");
             System.exit(0);
         }
+
+        // split the command
         if(cmd[0].equals("-r")){    // -r n d x
             type = 2;
             int n = Integer.valueOf(cmd[1]);
             float d = Float.valueOf(cmd[2]);
             int x = Integer.valueOf(cmd[3]);
             myGraph = new MyGraph(n, d, x);
+            while(myGraph.adjList.length != myGraph.traversal())
+                myGraph = new MyGraph(n, d, x);
         }else if(cmd[0].equals("-l") || cmd[0].equals("-f")){ // -lor-f filename
             if(cmd[0].equals("-l")) {
                 type = 0;
@@ -607,6 +634,8 @@ public class Dijkstra {
             }
             System.out.println(cmd[0]);
             myGraph = new MyGraph(cmd[1]);
+            while(myGraph.adjList.length != myGraph.traversal())
+                myGraph = new MyGraph(cmd[1]);
         }else{
             myGraph = null;
             type = Dijkstra.INFINITE;
@@ -614,12 +643,12 @@ public class Dijkstra {
             System.exit(0);
         }
 
-        // Initialize the tree structure
+        // Initialize the ltree structure
         dijkstra = new Dijkstra(myGraph, type);
         System.out.println("------------------- ORIGINAL TREE ------------------------");
-        MyPrint.myPrint(dijkstra.tree.getMin());
+        MyPrint.myPrint(dijkstra.ltree.getMin());
 
         // Run the Dijkstra algorithm
-        dijkstra.DijkstraAlg(myGraph, myGraph.x);
+        dijkstra.DijkstraAlg(myGraph);
     }
 }
