@@ -2,6 +2,7 @@
  * Created by peng on 6/29/15.
  */
 import java.io.*;
+import java.util.Map;
 import java.util.Random;
 
 
@@ -153,44 +154,40 @@ class MyBST_Node {
         left = null;
         right = null;
     }
-    public boolean biggerThan(MyBST_Node node) {
-        if(node == null) return true;
-        else return this.id > node.id ? true:false;
-    }
 }
 
 class MyBST {
     MyBST_Node root;
 
-    public MyBST() {
-        root = null;
+    public MyBST(MyBST_Node root) {
+        this.root = root;
     }
-    public boolean contains(MyBST_Node node) {
-        return contains(root, node);
+    public boolean contains(int id) {
+        if(id > root.id)
+            return contains(root.right, id);
+        else
+            return contains(root.left, id);
     }
 
-    private boolean contains(MyBST_Node subRoot, MyBST_Node node) {
+    private boolean contains(MyBST_Node subRoot, int id) {
         if(subRoot == null)
             return false;
-        if(node.biggerThan(subRoot))
-            return contains(subRoot.right, node);
+        if(id == subRoot.id)
+            return true;
+        else if(id > subRoot.id)
+            return contains(subRoot.right, id);
         else
-            return contains(subRoot.left, node);
+            return contains(subRoot.left, id);
     }
 
     public void insert(MyBST_Node node) {
-        root = insert(root, node);
+        insert(root, node);
     }
     private MyBST_Node insert(MyBST_Node subRoot, MyBST_Node node) {
-        // the ltree is empty
-        if(root == null) {
-            root = node;
-            return root;
-        }
         if(subRoot == null)
             return node;
-        // otherwise
-        if(node.biggerThan(subRoot))
+
+        if(node.id > subRoot.id)
             subRoot.right = insert(subRoot.right, node);
         else
             subRoot.left = insert(subRoot.left, node);
@@ -206,40 +203,50 @@ class MyGraph {
     int x;  // source node
     float d;  // density of edges
     LinkedListNode[] adjList;
+    MyBST[] bst;
 
     public MyGraph(int n, float d, int x) {
         this.x = x;
         this.numVertex = n;
         this.d = d;
-        numEdge = (int)(n*(n-1)/2.0 * d);
+        numEdge = (int)Math.ceil(n * (n - 1) / 2.0 * d);
 
-        adjList = new LinkedListNode[numVertex];
-        for(int i=0; i < numVertex; i++) {
-            adjList[i] = new LinkedListNode();
-        }
-
-        // generate edges
-        MyBST[] bst = new MyBST[numVertex];
-        for(int i=0; i < numEdge; i++){
-            Random random = new Random(System.currentTimeMillis()*i);
-            int u = random.nextInt(numVertex);
-            int v = random.nextInt(numVertex);
-            MyBST_Node nodeV = new MyBST_Node(v);
-            MyBST_Node nodeU = new MyBST_Node(u);
-            if(bst[u] == null)
-                bst[u] = new MyBST();
-            if(bst[v] == null)
-                bst[v] = new MyBST();
-            // skip this if u & v already connected
-            if(u==v || bst[u].contains(nodeV)) {
-                i --;
-                continue;
+        while(true) {
+            System.out.println("SourceNode:" + x + " -- # of Node:" + numVertex + " -- # of Edge:" + numEdge);
+            adjList = new LinkedListNode[numVertex];
+            for(int i=0; i < numVertex; i++) {
+                adjList[i] = new LinkedListNode();
             }
-            int w = random.nextInt(1000) + 1;
-            putAdjList(u, v, w);
-            putAdjList(v, u, w);
-            bst[u].insert(nodeV);
-            bst[v].insert(nodeU);
+
+            bst = new MyBST[numVertex];
+            for(int i=0; i < numVertex; i++) {
+                MyBST_Node mid = new MyBST_Node(numVertex/2);
+                bst[i] = new MyBST(mid);
+            }
+            // generate edges
+            for (int i = 0; i < numEdge; i++) {
+                Random random = new Random(System.currentTimeMillis() * i);
+                int u = random.nextInt(numVertex);
+                int v = random.nextInt(numVertex);
+//                if (bst[u] == null)
+//                    bst[u] = new MyBST();
+//                if (bst[v] == null)
+//                    bst[v] = new MyBST();
+                // skip this if u & v already connected
+                if (u == v || bst[u].contains(v)) {
+                    i--;
+                    continue;
+                }
+                int w = random.nextInt(1000) + 1;
+                putAdjList(u, v, w);
+                putAdjList(v, u, w);
+                bst[u].insert(new MyBST_Node(v));
+                bst[v].insert(new MyBST_Node(u));
+            }
+            if(traversal() == adjList.length)
+                break;
+            else
+                System.out.println("not all connected");
         }
 //        System.out.println("---------------------- THE GRAPH ----------------------");
 //        MyPrint.myPrint(adjList);
@@ -271,7 +278,8 @@ class MyGraph {
                     Integer.valueOf(tmp[0]),
                     Integer.valueOf(tmp[2]));
         }
-//        System.out.println("---------------------- THE GRAPH ----------------------");
+        System.out.println("SourceNode:" + x + " -- # of Node:" + numVertex + " -- # of Edge:" + numEdge);
+        System.out.println("---------------------- THE GRAPH ----------------------");
 //        MyPrint.myPrint(adjList);
 //        System.out.println();
     }
@@ -288,36 +296,62 @@ class MyGraph {
         }
     }
 
+//    public int traversal() {
+//        int count = 0;
+//        boolean[] counted = new boolean[adjList.length];
+//        for(int i=0; i < counted.length; i++)
+//            counted[i] = false;
+//
+//        for(int i=0; i < adjList.length; i++) {
+//            // if the node is not connected to others -> not all connected
+//            if (adjList[i].head == null) {
+//                return -1;
+//            }
+//            // add this node to record
+//            if (!counted[i]) {
+//                counted[i] = true;
+//                count++;
+//            }
+//            Neighbour it = adjList[i].head;
+//            while (it.next != null) {
+//                if (!counted[it.id]) {
+//                    counted[it.id] = true;
+//                    count++;
+//                }
+//                it = it.next;
+//            }
+//            if (it != null) {
+//                if (!counted[it.id]) {
+//                    counted[it.id] = true;
+//                    count++;
+//                }
+//            }
+//        }
+//        return count;
+//    }
+    private int DFS(int id, boolean[] counted, int count) {
+        Neighbour it = adjList[id].head;
+        while(it != null) {
+            // count only when it is a neighbour of another node rather than in the adjacency list
+            if(!counted[it.id]) {
+                counted[it.id] = true;
+                count ++;
+                count = DFS(it.id, counted, count);
+            }else
+                it = it.next;
+        }
+        return count;
+    }
     public int traversal() {
         int count = 0;
         boolean[] counted = new boolean[adjList.length];
         for(int i=0; i < counted.length; i++)
             counted[i] = false;
-        for(int i=0; i < adjList.length; i++) {
-            if(adjList[i].head == null) {
-                return -1;
-            }
+        counted[x] = true;
+        count ++;
 
-            if(!counted[i]) {
-                counted[i] = true;
-                count++;
-            }else {
-                Neighbour it = adjList[i].head;
-                while (it.next != null) {
-                    if (!counted[it.id]) {
-                        counted[it.id] = true;
-                        count++;
-                    }
-                    it = it.next;
-                }
-                if (it != null) {
-                    if (!counted[it.id]) {
-                        counted[it.id] = true;
-                        count++;
-                    }
-                }
-            }
-        }
+        count = DFS(x, counted, count);
+
         return count;
     }
 }
@@ -576,9 +610,11 @@ class FibonacciHeap {
     FibonacciHeapNode min;
     FibonacciHeapNode[] fiboArray;
     private int n;
+    private int numVertex;
 
     public FibonacciHeap(LinkedListNode[] adjlist, int sid) {
         n = 0;
+        numVertex = adjlist.length;
         fiboArray = new FibonacciHeapNode[adjlist.length];
         fiboArray[sid] = new FibonacciHeapNode(sid);
 //        fiboArray[sid].setDist(0);
@@ -601,10 +637,8 @@ class FibonacciHeap {
 
     private void link(FibonacciHeapNode y, FibonacciHeapNode x) {
         // remove y from the root list
-        y.left.right = y.right;
-        y.right.left = y.left;
-        y.left = y;
-        y.right = y;
+        removeNode(y);
+        y.left = y.right = y;
 
         // make y a child of x
         FibonacciHeapNode child = x.child;
@@ -634,8 +668,12 @@ class FibonacciHeap {
     }
     private void consolidate() {
         // initialize the degree array to record all different degrees in the root list
-        FibonacciHeapNode[] degreeArray = new FibonacciHeapNode[n];
-        for(int i=0; i < n; i++) {
+//        int maxDegree = (int)Math.floor(Math.log(n)/Math.log(2.0)) + 1;
+//        int maxDegree = (int)Math.ceil(Math.log((long)numVertex)/Math.log(2.0));
+        int maxDegree = n;
+        FibonacciHeapNode[] degreeArray = new FibonacciHeapNode[maxDegree];
+//        int maxDegree = n;
+        for(int i=0; i < maxDegree; i++) {
             degreeArray[i] = null;
         }
 
@@ -662,10 +700,15 @@ class FibonacciHeap {
 
         // reset the root list
         min = null;
-        for(int i=0; i < n; i++) {
+        n = 0;
+        for(int i=0; i < maxDegree; i++,n++) {
             if(degreeArray[i] != null) {
-                add(degreeArray[i], min);
-                if(degreeArray[i].dist < min.dist || min == null)
+                if(min == null) {
+                    min = degreeArray[i];
+                    continue;
+                }
+                insert(degreeArray[i]);
+                if(degreeArray[i].dist < min.dist)
                     min = degreeArray[i];
             }
         }
@@ -679,23 +722,22 @@ class FibonacciHeap {
         FibonacciHeapNode oldMin = this.min;
         if(oldMin != null) {
             // for each child of min, add it to the root list
-            // this may update the min
-            while(min.child != null) {
+            while(oldMin.child != null) {
                 FibonacciHeapNode child = min.child;
 
-                add(child, min);
-                child.parent = null;
                 removeNode(child);
-
-                if(child.right == null)
-                    min.child = null;
+                if(child.right == child)
+                    oldMin.child = null;
                 else
-                    min.child = child.right;
+                    oldMin.child = child.right;
+
+                add(child, oldMin);
+                child.parent = null;
             }
 
             // remove oldMin from the root list
             removeNode(oldMin);
-            // the heap has only one node
+            // the heap has only one node, it has no children
             if(oldMin == oldMin.right)
                 min = null;
             else {
@@ -708,32 +750,16 @@ class FibonacciHeap {
         return oldMin;
     }
 
-    // head cannot be null
     private void add(FibonacciHeapNode node, FibonacciHeapNode head) {
-//        node.setLeft(min.getLeft());
-//        node.setRight(min);
-//        min.getLeft().setRight(node);
-//        min.setLeft(node);
-        if(head == null) {
-            node.left = node;
-            node.right = node;
-            min = node;
-            return;
-        }
         node.left = head.left;
         node.right = head;
         head.left.right = node;
         head.left = node;
     }
     public void insert(FibonacciHeapNode node) {
-        if(min == null)
+        add(node, min);
+        if(min.dist > node.dist)
             min = node;
-        else {
-            add(node, min);
-//            if(min.getDist() < node.getDist()) min = node;
-            if(min.dist > node.dist)
-                min = node;
-        }
         n ++;
     }
     private void cut(FibonacciHeapNode node, FibonacciHeapNode parent) {
@@ -752,7 +778,6 @@ class FibonacciHeap {
 
         node.parent = null;
         node.childCut = false;
-        node.left = node.right = node;
 
         // add the node to the root list
         add(node, min);
@@ -774,12 +799,16 @@ class FibonacciHeap {
         decreaseKey(fiboArray[id], newKey);
     }
     private void decreaseKey(FibonacciHeapNode node, long newKey) {
+//        if(min == null) return;
         FibonacciHeapNode parent = node.parent;
         node.dist = newKey;
+        // it is a child of other node
         if(parent != null && parent.dist > node.dist) {
             cut(node, parent);
             cascadingCut(parent);
-        }
+        }// else, it is a root node
+
+        // update the min if necessary
         if(min.dist > node.dist)
             min = node;
     }
@@ -813,14 +842,13 @@ class FibonacciHeap {
 
 
 public class Dijkstra {
-    public final static int INFINITE = 999999;
+    public final static int INFINITE = 99999999;
     private MyGraph myGraph;
     private LeftistTree ltree;
     private FibonacciHeap ftree;
     private int type;
 
     private boolean traversal[];
-    // ltree the the Q, when root is null -> Q is empty
 
     public Dijkstra(MyGraph myGraph, int type) {
         this.myGraph = myGraph;
@@ -868,12 +896,12 @@ public class Dijkstra {
     public void DijkstraAlg(MyGraph myGraph) {
         int u;
 
-        traversal = new boolean[myGraph.numVertex];
-        for(int i=0; i < myGraph.numVertex; i++) traversal[i] = false;
-
         // main for loop
         switch (type) {
             case 0:
+                traversal = new boolean[myGraph.numVertex];
+                for(int i=0; i < myGraph.numVertex; i++) traversal[i] = false;
+
                 while(ltree.getMin() != null) {
                     u = ltree.removeMin();
                     traversal[u] = true;
@@ -893,8 +921,12 @@ public class Dijkstra {
                 }
                 break;
             case 1:
+                traversal = new boolean[myGraph.numVertex];
+                for(int i=0; i < myGraph.numVertex; i++) traversal[i] = false;
+
                 while(ftree.getMin() != null) {
                     u = ftree.removeMin().id;
+                    traversal[u] = true;
                     Neighbour it = myGraph.adjList[u].head;
                     while(it.next != null) {
                         if(!traversal[it.id])
@@ -903,16 +935,26 @@ public class Dijkstra {
                     }
                     if(it != null && !traversal[it.id])
                         relax(u, it);
-                    System.out.println("--------------------------------------------------");
-                    if(ftree.getMin() != null) {
-                        System.out.println("min:" + ftree.getMin().id);
-                        MyPrint.myPrint(ftree);
-                    }
+//                    System.out.println("--------------------------------------------------");
+//                    if(ftree.getMin() != null) {
+//                        System.out.println("min:" + ftree.getMin().id);
+//                        MyPrint.myPrint(ftree);
+//                    }
                 }
                 break;
             case 2:
-                while(ftree.getMin() != null) {
-                    u = ftree.removeMin().id;
+                long start, stop, time;
+                // leftist
+                type = 0;
+                traversal = new boolean[myGraph.numVertex];
+                for(int i=0; i < myGraph.numVertex; i++) traversal[i] = false;
+
+                start = System.currentTimeMillis();
+                System.out.println("leftist: \nstart:"+start);
+                while(ltree.getMin() != null) {
+                    u = ltree.removeMin();
+                    traversal[u] = true;
+                    // Walk through the adjacency list of node u
                     Neighbour it = myGraph.adjList[u].head;
                     while(it.next != null) {
                         if(!traversal[it.id])
@@ -921,12 +963,43 @@ public class Dijkstra {
                     }
                     if(it != null && !traversal[it.id])
                         relax(u, it);
-                    System.out.println("--------------------------------------------------");
-                    if(ftree.getMin() != null) {
-                        System.out.println("min:" + ftree.getMin().id);
-                        MyPrint.myPrint(ftree);
-                    }
+//                    System.out.println("--------------------------------------------------");
+//                    if(ltree.getMin() != null) {
+//                        MyPrint.myPrint(ltree.getMin());
+//                    }
                 }
+                stop = System.currentTimeMillis();
+                System.out.println("stop:"+stop);
+                time = stop - start;
+                System.out.println("time:"+time);
+
+                // fibonacci
+                type = 1;
+                for(int i=0; i < myGraph.numVertex; i++) traversal[i] = false;
+
+                start = System.currentTimeMillis();
+                System.out.println("fibonacci: \nstart:"+start);
+                while(ftree.getMin() != null) {
+                    u = ftree.removeMin().id;
+                    traversal[u] = true;
+                    Neighbour it = myGraph.adjList[u].head;
+                    while(it.next != null) {
+                        if(!traversal[it.id])
+                            relax(u, it);
+                        it = it.next;
+                    }
+                    if(it != null && !traversal[it.id])
+                        relax(u, it);
+//                    System.out.println("--------------------------------------------------");
+//                    if(ftree.getMin() != null) {
+//                        System.out.println("min:" + ftree.getMin().id);
+//                        MyPrint.myPrint(ftree);
+//                    }
+                }
+                stop = System.currentTimeMillis();
+                System.out.println("stop:"+stop);
+                time = stop - start;
+                System.out.println("time:"+time);
                 break;
         }
     }
@@ -938,11 +1011,11 @@ public class Dijkstra {
 
         System.out.print("Please input the command: ");
 //        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-//        String[] cmd = br.toString().split(" ");
+//        String[] cmd = br.toString().split("\\s");
 //        String[] cmd = ("-l topo.txt").split(" ");
-//        String[] cmd = ("-f topo.txt").split(" ");
+        String[] cmd = ("-r big.txt").split(" ");
 //        String[] cmd = ("-r 5000 1 3").split(" ");
-        String[] cmd = ("-r 10 0.3 3").split(" ");
+//        String[] cmd = ("-r 3000 0.2 3").split(" ");
 
         if(cmd.length != 4 && cmd.length != 2) {
             System.err.println("Usage: [-r n d x] or [-f/-l filename]");
@@ -955,14 +1028,9 @@ public class Dijkstra {
             int n = Integer.valueOf(cmd[1]);
             float d = Float.valueOf(cmd[2]);
             int x = Integer.valueOf(cmd[3]);
+
+            System.out.println("-r");
             myGraph = new MyGraph(n, d, x);
-            while(myGraph.adjList.length != myGraph.traversal())
-                System.err.println("not all connected");
-                myGraph = new MyGraph(n, d, x);
-            System.out.println("SourceNode:" + myGraph.x + " -- # of Node:" + myGraph.numVertex + " -- # of Edge:" + myGraph.numEdge);
-            System.out.println("---------------------- THE GRAPH ----------------------");
-            MyPrint.myPrint(myGraph.adjList);
-            System.out.println();
         }else if(cmd[0].equals("-l") || cmd[0].equals("-f")){ // -lor-f filename
             if(cmd[0].equals("-l")) {
                 type = 0;
@@ -971,13 +1039,6 @@ public class Dijkstra {
             }
             System.out.println(cmd[0]);
             myGraph = new MyGraph(cmd[1]);
-            while(myGraph.adjList.length != myGraph.traversal())
-                System.err.println("not all connected");
-                myGraph = new MyGraph(cmd[1]);
-            System.out.println("SourceNode:" + myGraph.x + " -- # of Node:" + myGraph.numVertex + " -- # of Edge:" + myGraph.numEdge);
-            System.out.println("---------------------- THE GRAPH ----------------------");
-            MyPrint.myPrint(myGraph.adjList);
-            System.out.println();
         }else{
             myGraph = null;
             type = Dijkstra.INFINITE;
@@ -985,22 +1046,22 @@ public class Dijkstra {
             System.exit(0);
         }
 
-        // Initialize the ltree structure
+        // Initialize the tree structure
         dijkstra = new Dijkstra(myGraph, type);
-        System.out.println("------------------- ORIGINAL TREE ------------------------");
-        switch (dijkstra.type) {
-            case 0:
-                MyPrint.myPrint(dijkstra.ltree.getMin());
-                break;
-            case 1:
-                System.out.println(dijkstra.ftree.getMin().id);
-                break;
-            case 2:
-                System.out.println(dijkstra.ftree.getMin().id);
-                break;
-        }
+//        System.out.println("------------------- ORIGINAL TREE ------------------------");
+//        switch (dijkstra.type) {
+//            case 0:
+//                MyPrint.myPrint(dijkstra.ltree.getMin());
+//                break;
+//            case 1:
+//                System.out.println(dijkstra.ftree.getMin().id);
+//                break;
+//            case 2:
+//                break;
+//        }
 
         // Run the Dijkstra algorithm
         dijkstra.DijkstraAlg(myGraph);
+
     }
 }
