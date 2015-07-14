@@ -2,7 +2,6 @@
  * Created by peng on 6/29/15.
  */
 import java.io.*;
-import java.util.Map;
 import java.util.Random;
 
 
@@ -125,24 +124,14 @@ class LinkedListNode {
 }
 
 class Neighbour {
-
     int id;
     long w;
     Neighbour next = null;
-
-//    public Neighbour() {
-//        this.id = Dijkstra.INFINITE;
-//        this.w = Dijkstra.INFINITE;
-//    }
 
     public Neighbour(int id, int w) {
         this.id = id;
         this.w = w;
     }
-
-//    public boolean isNull() {
-//        return id==Dijkstra.INFINITE ? true:false;
-//    }
 }
 
 class MyBST_Node {
@@ -224,7 +213,7 @@ class MyGraph {
                 bst[i] = new MyBST(mid);
             }
             // generate edges
-            for (int i = 0; i < numEdge; i++) {
+            for (int i=0; i < numEdge; i++) {
                 Random random = new Random(System.currentTimeMillis() * i);
                 int u = random.nextInt(numVertex);
                 int v = random.nextInt(numVertex);
@@ -895,6 +884,7 @@ public class Dijkstra {
 
     public void DijkstraAlg(MyGraph myGraph) {
         int u;
+        long start, stop, time;
 
         // main for loop
         switch (type) {
@@ -902,6 +892,8 @@ public class Dijkstra {
                 traversal = new boolean[myGraph.numVertex];
                 for(int i=0; i < myGraph.numVertex; i++) traversal[i] = false;
 
+                start = System.currentTimeMillis();
+                System.out.println("leftist: \nstart:"+start);
                 while(ltree.getMin() != null) {
                     u = ltree.removeMin();
                     traversal[u] = true;
@@ -914,16 +906,23 @@ public class Dijkstra {
                     }
                     if(it != null && !traversal[it.id])
                         relax(u, it);
-                    System.out.println("--------------------------------------------------");
-                    if(ltree.getMin() != null) {
-                        MyPrint.myPrint(ltree.getMin());
-                    }
+//                    System.out.println("--------------------------------------------------");
+//                    if(ltree.getMin() != null) {
+//                        MyPrint.myPrint(ltree.getMin());
+//                    }
                 }
+                stop = System.currentTimeMillis();
+                System.out.println("stop:"+stop);
+                time = stop - start;
+                System.out.println("time:"+time);
+
                 break;
             case 1:
                 traversal = new boolean[myGraph.numVertex];
                 for(int i=0; i < myGraph.numVertex; i++) traversal[i] = false;
 
+                start = System.currentTimeMillis();
+                System.out.println("leftist: \nstart:"+start);
                 while(ftree.getMin() != null) {
                     u = ftree.removeMin().id;
                     traversal[u] = true;
@@ -941,9 +940,13 @@ public class Dijkstra {
 //                        MyPrint.myPrint(ftree);
 //                    }
                 }
+                stop = System.currentTimeMillis();
+                System.out.println("stop:"+stop);
+                time = stop - start;
+                System.out.println("time:"+time);
+
                 break;
             case 2:
-                long start, stop, time;
                 // leftist
                 type = 0;
                 traversal = new boolean[myGraph.numVertex];
@@ -1009,45 +1012,50 @@ public class Dijkstra {
         MyGraph myGraph;
         int type;   // 0:Leftist, 1:Fibonnaci 2:Both
 
-        System.out.print("Please input the command: ");
+//        System.out.print("Please input the command: ");
 //        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-//        String[] cmd = br.toString().split("\\s");
+//        String[] args = br.toString().split(" ");
 //        String[] cmd = ("-l topo.txt").split(" ");
-        String[] cmd = ("-r big.txt").split(" ");
+//        String[] cmd = ("-f big.txt").split(" ");
 //        String[] cmd = ("-r 5000 1 3").split(" ");
 //        String[] cmd = ("-r 3000 0.2 3").split(" ");
 
-        if(cmd.length != 4 && cmd.length != 2) {
+        if(args.length != 4 && args.length != 2) {
             System.err.println("Usage: [-r n d x] or [-f/-l filename]");
             System.exit(0);
         }
 
+        long s1 = System.currentTimeMillis();
         // split the command
-        if(cmd[0].equals("-r")){    // -r n d x
+        if(args[0].equals("-r")){    // -r n d x
             type = 2;
-            int n = Integer.valueOf(cmd[1]);
-            float d = Float.valueOf(cmd[2]);
-            int x = Integer.valueOf(cmd[3]);
+            int n = Integer.valueOf(args[1]);
+            float d = Float.valueOf(args[2]);
+            int x = Integer.valueOf(args[3]);
 
             System.out.println("-r");
             myGraph = new MyGraph(n, d, x);
-        }else if(cmd[0].equals("-l") || cmd[0].equals("-f")){ // -lor-f filename
-            if(cmd[0].equals("-l")) {
+        }else if(args[0].equals("-l") || args[0].equals("-f")){ // -lor-f filename
+            if(args[0].equals("-l")) {
                 type = 0;
             }else{
                 type = 1;
             }
-            System.out.println(cmd[0]);
-            myGraph = new MyGraph(cmd[1]);
+            System.out.println(args[0]);
+            myGraph = new MyGraph(args[1]);
         }else{
             myGraph = null;
             type = Dijkstra.INFINITE;
             System.err.println("Usage: [-r n d x] or [-f/-l filename]");
             System.exit(0);
         }
+        long s2 = System.currentTimeMillis();
+        System.out.println("Generate graph:"+(s2-s1));
 
         // Initialize the tree structure
         dijkstra = new Dijkstra(myGraph, type);
+        long s3 = System.currentTimeMillis();
+        System.out.println("Initialize the Dijkstra tree:"+(s3-s2));
 //        System.out.println("------------------- ORIGINAL TREE ------------------------");
 //        switch (dijkstra.type) {
 //            case 0:
