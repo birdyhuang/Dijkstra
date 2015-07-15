@@ -36,7 +36,7 @@
 9.How to update the min pointer in the removeMin operation?
 	- Once we pair-wise combine the roots, we need to reconstruct the heap 
 		by inserting them one by one into the root list.
-10.How to reduce the posibility of generating an already existed edge?
+10.How to reduce the possibility of generating an already existed edge?
 	- The possibility of the existence of an edge is y(# of edges)/x(max)
 	- So use an credit(100 for instance), split it into 100 units. 
 		y/x*100=z units(digits) in this 100 units represent that the edge 
@@ -45,9 +45,15 @@
 	- Then randomly generates a number(1~100), if this number is one of 
 		those z units, then it means this edge exists, so add it into the 
 		graph. Otherwise(the rest units), this edge doesn't exist.
-	- We traverse all the edges, not matter it is added to the graph or
+	- We traverse all the edges, no matter it is added to the graph or
 		not. When the un-traversed # of edges equals to the actually 
 		needed, add all the rest of un-traversed edges into the graph. 
+11.swapChild(root)
+	- cannot use swap(left, right)
+		{tmp = left;
+		 left = right;
+		 right = tmp}
+	- Why?
 
 
 * Generic(similar to template in C++)
