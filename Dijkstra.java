@@ -170,7 +170,7 @@ class MyGraph {
     }
 
     public MyGraph(int n, float d, int x) {
-        final int units = 10000;
+        final int UNITS = 10000;
         this.x = x;
         this.numVertex = n;
         this.d = d;
@@ -178,65 +178,74 @@ class MyGraph {
         numEdge = (long)(maxEdge * d);
 
         while(true) {
-            long untraversed = maxEdge;
-            long needed = numEdge;
-            int bound = (int)((float)needed / maxEdge * units);
-
             System.out.println("SourceNode:" + x + " -- # of Node:" + numVertex + " -- # of Edge:" + numEdge);
             adjList = new LinkedListNode[numVertex];
-            for(int i=0; i < numVertex; i++) {
+            for (int i = 0; i < numVertex; i++) {
                 adjList[i] = new LinkedListNode();
             }
-//            bst = new MyBST[numVertex];
-//            for(int i=0; i < numVertex; i++) {
-//                MyBST_Node mid = new MyBST_Node(numVertex/2);
-//                bst[i] = new MyBST(mid);
-//            }
-//            // generate edges
-//            for (int i=0; i < numEdge; i++) {
-//                Random random = new Random(System.currentTimeMillis() * i);
-//                int u = random.nextInt(numVertex);
-//                int v = random.nextInt(numVertex);
-////                if (bst[u] == null)
-////                    bst[u] = new MyBST();
-////                if (bst[v] == null)
-////                    bst[v] = new MyBST();
-//                // skip this if u & v already connected
-//                if (u == v || bst[u].contains(v)) {
-//                    i--;
-//                    continue;
-//                }
-//                int w = random.nextInt(1000) + 1;
-//                putAdjList(u, v, w);
-//                putAdjList(v, u, w);
-//                bst[u].insert(new MyBST_Node(v));
-//                bst[v].insert(new MyBST_Node(u));
-//            }
-            for(int i=0; i < numVertex; i++) {
-                for(int j=i+1; j < numVertex; j++){
-                    // more edges are needed
-                    if( needed > 0) {
-                        Random random = new Random(System.currentTimeMillis() * (i+1) * j);
-                        // there are more untraversed edges than needed
-                        if (needed < untraversed) {
-                            int r = random.nextInt(units) + 1;
-                            // less than the bound -> the edge exists
-                            if (r <= bound) {
+
+            if(d >= (float)0.01) {
+                long untraversed = maxEdge;
+                long needed = numEdge;
+                int bound = (int) ((float) needed / maxEdge * UNITS);
+
+                for (int i = 0; i < numVertex; i++) {
+                    for (int j = i + 1; j < numVertex; j++, untraversed--) {
+                        // more edges are needed
+                        if (needed > 0) {
+                            Random random = new Random(System.currentTimeMillis() * (i + 1) * j);
+                            // there are more untraversed edges than needed
+                            if (needed < untraversed) {
+                                int r = random.nextInt(UNITS) + 1;
+                                // less than the bound -> the edge exists
+                                if (r <= bound) {
+                                    genEdge(i, j);
+                                    needed--;
+                                }
+                            } else {    // the rest number of untraversed edges are all needed
+                                // add all
                                 genEdge(i, j);
                                 needed--;
                             }
-                        } else {    // the rest number of untraversed edges are all needed
-                            // add all
-                            genEdge(i, j);
-                            needed --;
                         }
-                        untraversed--;
+                        // all edges have been generated
+                        else {
+                            i = j = numVertex + 1;
+                            break;
+                        }
                     }
-                    // all edges have been generated
-                    else {
-                        i = numVertex + 1;
-                        break;
+                }
+            } else {
+                bst = new MyBST[numVertex];
+                for (int i = 0; i < numVertex; i++) {
+                    MyBST_Node mid = new MyBST_Node(numVertex / 2);
+                    bst[i] = new MyBST(mid);
+                }
+
+                for(int i=0; i < numVertex-1; i++) {
+                    int j = i + 1;
+                    Random random = new Random(System.currentTimeMillis() * i);
+                    int w = random.nextInt(1000) + 1;
+                    putAdjList(i, j, w);
+                    putAdjList(j, i, w);
+                    bst[i].insert(new MyBST_Node(j));
+                    bst[j].insert(new MyBST_Node(i));
+                }
+                // generate edges
+                for (int i = 0; i < numEdge-(numVertex-1); i++) {
+                    Random random = new Random(System.currentTimeMillis() * i);
+                    int u = random.nextInt(numVertex);
+                    int v = random.nextInt(numVertex);
+                    // skip this if u & v already connected
+                    if (u == v || bst[u].contains(v)) {
+                        i--;
+                        continue;
                     }
+                    int w = random.nextInt(1000) + 1;
+                    putAdjList(u, v, w);
+                    putAdjList(v, u, w);
+                    bst[u].insert(new MyBST_Node(v));
+                    bst[v].insert(new MyBST_Node(u));
                 }
             }
             if(traversal() == adjList.length)
@@ -571,7 +580,6 @@ class FibonacciHeap {
         numVertex = adjlist.length;
         fiboArray = new FibonacciHeapNode[adjlist.length];
         fiboArray[sid] = new FibonacciHeapNode(sid);
-//        fiboArray[sid].setDist(0);
         fiboArray[sid].dist = 0;
         min = fiboArray[sid];
 
@@ -829,8 +837,13 @@ public class Dijkstra {
                 ftree = new FibonacciHeap(myGraph.adjList, myGraph.x);
                 break;
             case 2: // Both
+                long s1 = System.nanoTime();
                 ltree = new LeftistTree(myGraph.adjList, myGraph.x);
+                long s2 = System.nanoTime();
+                System.out.println("time to generate Leftist:"+(s2-s1)+"ns");
                 ftree = new FibonacciHeap(myGraph.adjList, myGraph.x);
+                long s3 = System.nanoTime();
+                System.out.println("time to generate Fibo:"+(s3-s2)+"ns");
                 break;
         }
     }
@@ -861,6 +874,8 @@ public class Dijkstra {
         PathNode head = new PathNode();
         PathNode last = head;
 
+        long averRM = 0, averRL = 0;
+
         // main for loop
         switch (type) {
             case 0:
@@ -868,9 +883,12 @@ public class Dijkstra {
                 for (int i = 0; i < myGraph.numVertex; i++) traversal[i] = false;
 
                 start = System.currentTimeMillis();
-                System.out.println("leftist:");
+                System.out.println("-----------------Leftist Tree----------------");
                 while (ltree.getMin() != null) {
+                    long s0 = System.nanoTime();
                     u = ltree.removeMin();
+                    long s1 = System.nanoTime();
+                    averRM += (s1-s0);
                     last.next = new PathNode(u, (int)ltree.leftistTree[u].dist);
                     last = last.next;
 
@@ -884,10 +902,15 @@ public class Dijkstra {
                     }
                     if (it != null && !traversal[it.id])
                         relax(u, it, type);
+//                    long s2 = System.currentTimeMillis();
+                    long s2 = System.nanoTime();
+                    averRL += (s2-s1);
                 }
                 stop = System.currentTimeMillis();
                 time = stop - start;
-                System.out.println("time:" + time);
+                System.out.println("average RemoveMin() time:"+(float)averRM/myGraph.numVertex+"ns");
+                System.out.println("average Relax() time:"+(float)averRL/myGraph.numVertex+"ns");
+                System.out.println("total time:" + time+"ms");
                 MyPrint.myPrint(head, new File("lpath.txt"));
                 MyPrint.myPrint(ltree.leftistTree, new File("leftOutput.txt"));
 
@@ -897,9 +920,12 @@ public class Dijkstra {
                 for(int i=0; i < myGraph.numVertex; i++) traversal[i] = false;
 
                 start = System.currentTimeMillis();
-                System.out.println("fibonacci:");
+                System.out.println("-----------------Fibonacci Heap----------------");
                 while(ftree.getMin() != null) {
+                    long s0 = System.nanoTime();
                     u = ftree.removeMin().id;
+                    long s1 = System.nanoTime();
+                    averRM += (s1-s0);
                     last.next = new PathNode(u, (int)ftree.fiboArray[u].dist);
                     last = last.next;
 
@@ -912,10 +938,15 @@ public class Dijkstra {
                     }
                     if(it != null && !traversal[it.id])
                         relax(u, it, type);
+//                    long s2 = System.currentTimeMillis();
+                    long s2 = System.nanoTime();
+                    averRL += (s2-s1);
                 }
                 stop = System.currentTimeMillis();
                 time = stop - start;
-                System.out.println("time:"+time);
+                System.out.println("average RemoveMin() time:"+(float)averRM/myGraph.numVertex+"ns");
+                System.out.println("average Relax() time:"+(float)averRL/myGraph.numVertex+"ns");
+                System.out.println("total time:"+time+"ms");
                 MyPrint.myPrint(head, new File("fpath.txt"));
                 MyPrint.myPrint(ftree.fiboArray, new File("fiboOutput.txt"));
 
@@ -966,7 +997,7 @@ public class Dijkstra {
             System.exit(0);
         }
         long s2 = System.currentTimeMillis();
-        System.out.println("Generate graph:"+(s2-s1));
+        System.out.println("Generate graph:"+(s2-s1)+"ms");
 
         // Initialize the tree structure
         dijkstra = new Dijkstra(myGraph, type);
