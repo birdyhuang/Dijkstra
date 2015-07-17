@@ -938,7 +938,6 @@ public class Dijkstra {
                     }
                     if(it != null && !traversal[it.id])
                         relax(u, it, type);
-//                    long s2 = System.currentTimeMillis();
                     long s2 = System.nanoTime();
                     averRL += (s2-s1);
                 }
